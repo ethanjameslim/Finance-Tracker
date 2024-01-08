@@ -1,28 +1,49 @@
 # Finance-Tracker
 Personal Finance Tracker Website Project
-I built this website as a final project for the CS50 Course by harvard and is my first ever personal project>
-My idea was that I could use this website to aid my finnancial management When I start university overseas next year.
-The functionality that I have added so far include.
+
+I built this website as a final project for the CS50 Course by Harvard, and it is my first-ever personal project. My idea was that I could use this website to aid my financial management when I start university overseas next year. The functionality that I have added so far includes:
 
 1. Adding and Deleting expenses.
 2. Managing budgets.
-3. Visualising these budgets in a Spending vs Budget bar graph for each month.
-4. Notification when a buget is exceeded for that month.
+3. Visualizing these budgets in a Spending vs Budget bar graph for each month.
+4. Notification when a budget is exceeded for that month.
 
-IF YOU WANT TO RECREATE THIS PROGRAM:
-1. Setup a virtual environment and install all the dependencies
-2. Generate a password Hash
-To Generate A Password Hash run the following command:
+## Setup Instructions
+
+### Clone the Repository
+Clone this repository to your local machine.
+
+### Set Up a Virtual Environment
+Create and activate a virtual environment in the project directory:
 
 ```bash
-python password.py
+python3 -m venv venv
+```
+```bash
+source venv/bin/activate
+``` # For Unix or MacOS
+
+```bash
+venv\Scripts\activate  # For Windows
+```
+### Install Dependencies
+Install the required dependencies:
+```bash
+pip install -r requirements.txt
+```
+### Create a .env File
+Generate a hashed password using python password.py, then create a .env file in the same directory as app.py and add: 
+HASHED_PASSWORD=your_hashed_password_here
+
+### Initialize the Database
+Create the finance_tracker.db database and set up tables:
+```bash
+sqlite3 finance_tracker.db < schema.sql
 ```
 
-3. Create a .env file in the same route as the app.py and in that file add: HASHED_PASSWORD = (Your hashed password here)
-4. Create a file called finance-tracker.db
-5. Run the following command:
-   sqlite3 finance_tracker.db
-6. Copy paste the entire contents of the schema.sql to the terminal after (Terminal should say sqlite3 before you enter the CREATE TABLE commands)
-   
-7. exit sqlite3 and enter `flask run` into the terminal
+### Run the Application
+Start the Flask application with:
+```bash
+flask run
+```
    
