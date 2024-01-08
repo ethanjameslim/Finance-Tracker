@@ -35,7 +35,7 @@ Install the required dependencies:
 pip install -r requirements.txt
 ```
 ### Create a .env File
-Generate a hashed password using python password.py, then create a .env file in the same directory as app.py and add: 
+Generate a hashed password using `python password.py`, then create a .env file in the same directory as app.py and add: 
 HASHED_PASSWORD=your_hashed_password_here
 
 ### Initialize the Database
