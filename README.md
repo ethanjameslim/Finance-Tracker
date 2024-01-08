@@ -24,4 +24,5 @@ python password.py
    sqlite3 finance_tracker.db
 6. Copy paste the entire contents of the schema.sql to the terminal after (Terminal should say sqlite3 before you enter the CREATE TABLE commands)
    
+7. exit sqlite3 and enter `flask run` into the terminal
    
