@@ -38,6 +38,13 @@ pip install -r requirements.txt
 Generate a hashed password using `python password.py`, then create a .env file in the same directory as app.py and add: 
 HASHED_PASSWORD=your_hashed_password_here
 
+### Update username in app.py
+change the usename variable to what you would like: 
+
+class User(UserMixin)
+    id = 1
+    username = "ethanjameslim" <-- Change this string
+
 ### Initialize the Database
 Create the finance_tracker.db database and set up tables:
 ```bash
