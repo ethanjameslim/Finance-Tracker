@@ -19,12 +19,15 @@ Create and activate a virtual environment in the project directory:
 ```bash
 python3 -m venv venv
 ```
+
+# For Unix or MacOS
 ```bash
 source venv/bin/activate
-``` # For Unix or MacOS
+``` 
 
+# For Windows
 ```bash
-venv\Scripts\activate  # For Windows
+venv\Scripts\activate 
 ```
 ### Install Dependencies
 Install the required dependencies:
