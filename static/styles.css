@@ -1,0 +1,12 @@
+.container-fluid{
+    padding-top: 2rem;
+}
+
+.center-div {
+    padding-top: 100px;
+    display: flex;
+    justify-content: center;  /* Aligns horizontally */
+    align-items: center;      /* Aligns vertically if the div has a specified height */
+    height: 100px;            /* Optional: Set a specific height for vertical alignment */
+}
+

@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Graphs
+{% endblock %}
+
+{% block main %}
+<h1>Visualise Your Spending</h1>
+
+{% for month in months %}
+    <h2>{{ month }}</h2>
+    <canvas id="chart-{{ month }}"></canvas>
+{% endfor %}
+
+<a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+</a>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        {% for month in months %}
+            var ctx = document.getElementById('chart-{{ month }}').getContext('2d');
+            var chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: {{ categories | tojson }},
+                    datasets: [{
+                        label: 'Spending for {{ month }}',
+                        data: {{ spending_data[loop.index0] | tojson }},
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'Budget for {{ month }}',
+                        data: {{ budget_data[loop.index0] | tojson }},
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        {% endfor %}
+    });
+</script>
+{% endblock %}
+
+
+

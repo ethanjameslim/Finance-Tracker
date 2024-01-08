@@ -1,0 +1,108 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Home
+{% endblock %}
+
+{% block main %}
+
+            <!-- Flash Budget exceeded message after add expense-->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <script>
+                    window.onload = function() {
+                        {% for category, message in messages %}
+                            alert("{{ message }}"); 
+                        {% endfor %}
+                    }
+                    </script>
+                {% endif %}
+            {% endwith %}
+
+<h1>UNSW Finance Tracker</h1>
+
+
+<h2>Budgets</h2>
+<table class="table table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th>Category</th>
+            <th>Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for budget in budgets %}
+            {% for category, amount in budget.items() %}
+                <tr>
+                    <td>{{ category }}</td>
+                    <td>{{ amount }}</td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+    </tbody>
+</table>
+
+    <h2>Expenses</h2>
+    <!-- Filter Form -->
+    <form action="/" method="get">
+        <label for="category">Category:</label>
+        <select name="category" id="category">
+            <option value="all">All Categories</option>
+            {% for category in categories %}
+            <option value="{{ category }}" {% if category == category_filter %}selected{% endif %}>{{ category }}</option>
+            {% endfor %}
+        </select>
+        
+
+        <label for="year">Year:</label>
+        <input type="text" name="year" id="year" placeholder="Year" value="{{ year_filter }}">
+
+        <label for="month">Month:</label>
+        <input type="text" name="month" id="month" placeholder="Month (e.g., 01)" value="{{ month_filter }}">
+
+        <input type="submit" value="Filter">
+    </form>
+
+    <!-- Expenses Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Expenses</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expense in expenses %}
+            <tr>
+                <td>{{ expense.date }}</td>
+                <td>{{ expense.category }}</td>
+                <td>{{ expense.amount }}</td>
+                <td>{{ expense.description }}</td>
+                <td> 
+                     <form method="post" action="/">   
+                        <button type="submit" name="delete_button" value="{{ expense.id }}">Delete</button>
+                     </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4">No expenses found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+        </div>
+    </div>
+</div>
+   
+</div>
+    {% endblock %}
+

@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Update Budgets
+{% endblock %}
+
+{% block main %}
+    <h1>UNSW Finance Tracker</h1>
+    <form action="/set_budget" method="post">
+        <label for="category">Category:</label>
+        <select name="category" id="category">
+            <option disabled selected>Select Category</option>
+            {% for category in categories %}
+            <option value="{{ category }}">{{ category }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="new_amount">Budget Amount:</label>
+        <input type="number" name="new_amount" id="new_amount" placeholder="Amount" required>
+
+        <button type="submit" class="btn btn-primary">Update Budget</button>
+    </form>
+
+    
+    <table class="table table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th>Category</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for budget in budgets %}
+                {% for category, amount in budget.items() %}
+                    <tr>
+                        <td>{{ category }}</td>
+                        <td>{{ amount }}</td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
