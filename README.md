@@ -14,8 +14,9 @@ IF YOU WANT TO RECREATE THIS PROGRAM:
 2. Generate a password Hash
 To Generate A Password Hash run the following command:
 
-```bash```
+```bash
 python password.py
+```
 
 3. Create a .env file in the same route as the app.py and in that file add: HASHED_PASSWORD = (Your hashed password here)
 4. Create a file called finance-tracker.db
