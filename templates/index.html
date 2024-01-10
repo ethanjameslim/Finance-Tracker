@@ -6,6 +6,15 @@
 
 {% block main %}
 
+{% for sub in subscriptions %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Reminder!</strong> Your subscription to {{ sub['name'] }} is due on {{ sub['next_due'] }}.
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+{% endfor %}
+
             <!-- Flash Budget exceeded message after add expense-->
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}

@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Subscriptions
+{% endblock %}
+
+{% block main %}
+<h1>Manage Subscriptions</h1>
+
+<!-- Form for adding new subscription -->
+<form method="post">
+    <input type="text" name="name" placeholder="Name" required>
+
+    <select name="interval" required>
+        <option value="">Select Interval</option>
+        <option value="Monthly">Monthly</option>
+        <option value="Annual">Annual</option>
+    </select>
+
+    <input type="date" name="next_due" placeholder="Next Due Date" required>
+
+    <input type="text" name="notes" placeholder="Notes">
+
+    <button type="submit" name="add_subscription">Add Subscription</button>
+</form>
+
+<!-- Display subscriptions -->
+<table class="table table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th>Name</th>
+            <th>Interval</th>
+            <th>Next Due Date</th>
+            <th>Notes</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    {% for sub in subscriptions %}
+    <tr>
+        <td>{{ sub['name'] }}</td>
+        <td>{{ sub['interval'] }}</td>
+        <td>{{ sub['next_due'] }}</td>
+        <td>{{ sub['notes'] }}</td>
+        <td>
+            <!-- Delete button -->
+            <form method="post">
+                <button type="submit" name="delete_subscription" value="{{ sub['sub_id'] }}">Delete</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+    {% endblock %}

@@ -6,22 +6,37 @@ import datetime
 import os  
 from flask_bcrypt import Bcrypt
 from dotenv import load_dotenv
+import requests
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
+#Load Environment Variables (Hashed Password) 
 load_dotenv()
+
 
 app = Flask(__name__)
 
 bcrypt = Bcrypt(app)
 
-
 app.secret_key = os.urandom(16)
-
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+#Commonwealth Bank Api --------------------------------------------------------------------------------------------------------------------------------------
 
+api_key = '' #enter your API key here
+account_id = ''
+seven_days_ago = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%dT%H:%M:%SZ')
+url = f'https://secure.api.commbank.com.au/api/cds-au/v1/banking/accounts/{account_id}/transactions?oldest-time={seven_days_ago}'
+
+headers = {
+    'Authorization': f'Bearer {api_key}',
+    'Content-Type': 'application/json'
+}
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------
 @login_manager.user_loader
 def load_user(user_id):
     return User() if int(user_id) == 1 else None
@@ -32,7 +47,7 @@ class User(UserMixin):
     username = "ethanjameslim"  # Replace with your desired username
     password_hash = os.environ.get("HASHED_PASSWORD")
 
-#FUNCTIONSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+#FUNCTIONS------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 def get_db_connection():
     conn = sqlite3.connect('finance_tracker.db', check_same_thread=False)
@@ -64,11 +79,27 @@ def checkbudgetexceeded(category, year_month):
         conn.close()
         return False  # No budget set for this category
 
+def update_next_due_dates():
+    conn = get_db_connection()
+    subscriptions = conn.execute('SELECT * FROM subscriptions').fetchall()
+
+    for sub in subscriptions:
+        next_due_date = datetime.strptime(sub['next_due'], '%Y-%m-%d')
+        if next_due_date < datetime.now():
+            if sub['interval'] == 'Monthly':
+                new_due_date = next_due_date + relativedelta(months=1)
+            elif sub['interval'] == 'Annual':
+                new_due_date = next_due_date.replace(year=next_due_date.year + 1)
+            
+            conn.execute('UPDATE subscriptions SET next_due = ? WHERE sub_id = ?',(new_due_date.strftime('%Y-%m-%d'), sub['sub_id']))
+    
+    conn.commit()
+    conn.close()
         
-#FUNCTIONSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSEND
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-#ROUTESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+#ROUTES---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 @app.teardown_appcontext
 def close_connection(exception):
     conn = get_db_connection()
@@ -139,24 +170,46 @@ def index():
     # Fetch expenses with the current filters
     cursor.execute(query, tuple(params))
     expenses = cursor.fetchall()
+
+    current_date = datetime.now()
+    next_month = current_date + timedelta(days=30)  # Adjust based on how you define 'next month'
+
+    # Query to fetch subscriptions due within the next month
+    subscriptions = conn.execute('SELECT * FROM subscriptions WHERE next_due BETWEEN ? AND ?',(current_date.strftime('%Y-%m-%d'), next_month.strftime('%Y-%m-%d'))).fetchall()
     
     cursor.close()
     conn.close()
 
-    return render_template("index.html", expenses=expenses, categories=categories, category_filter=category_filter, year_filter=year_filter, month_filter=month_filter, budgets=budgets)
+    return render_template("index.html", expenses=expenses, categories=categories, category_filter=category_filter, year_filter=year_filter, month_filter=month_filter, budgets=budgets, subscriptions=subscriptions)
 
 
 
 @app.route("/add_expense", methods=["GET", "POST"])
 @login_required
 def add_expense():
+    formatted_transactions = []  # Initialize an empty list for transactions
+
+    # Common logic for GET and POST to fetch transactions
+    if api_key and account_id:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            transactions_data = response.json()['data']['transactions']
+            formatted_transactions = [
+                {
+                    'description': t['description'],
+                    'date': datetime.strptime(t['postingDateTime'], '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%Y-%m-%d'),
+                    'amount': t['amount']
+                }
+                for t in transactions_data
+            ]
+
     if request.method == "POST":
         date = request.form['date']
         category = request.form['category']
         amount = request.form['amount']
         description = request.form['description']
 
-        year_month = datetime.datetime.strptime(date, '%Y-%m-%d').strftime('%Y-%m')
+        year_month = datetime.strptime(date, '%Y-%m-%d').strftime('%Y-%m')
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -164,12 +217,12 @@ def add_expense():
         conn.commit()
         cursor.close()
         if checkbudgetexceeded(category, year_month):
-            message = f"YOUR BUDGET HAS BEEN EXCEEDED IN THE CATEGORY: {category} IN THE MONTH: {year_month} STOOPID"
+            message = f"YOUR BUDGET HAS BEEN EXCEEDED IN THE CATEGORY: {category} IN THE MONTH: {year_month}"
             flash(message, 'warning')
-            
+        
         return redirect("/")
-    else:
-        return render_template("addexpense.html")
+
+    return render_template("addexpense.html", formatted_transactions=formatted_transactions)
 
 @app.route("/set_budget", methods=["GET", "POST"])
 @login_required
@@ -259,15 +312,40 @@ def spending_trend():
         months.append(row['month'])
         spending.append(row['total_spending'])
 
-    print(months)
-    print(spending)
-
     return render_template('spending_trend.html', months=months, spending=spending)
 
-    
+@app.route("/managesubs", methods=['GET', 'POST'])
+@login_required
+def managesubscriptions():
+    update_next_due_dates()
+
+    conn = get_db_connection()
+
+    # Handle adding a new subscription
+    if request.method == 'POST' and 'add_subscription' in request.form:
+        name = request.form['name']
+        interval = request.form['interval']
+        next_due = request.form['next_due']
+        notes = request.form['notes']
+        conn.execute('INSERT INTO subscriptions (name, interval, next_due, notes) VALUES (?, ?, ?, ?)',
+                     (name, interval, next_due, notes))
+        conn.commit()
+
+    # Handle deleting a subscription
+    if request.method == 'POST' and 'delete_subscription' in request.form:
+        sub_id = request.form['delete_subscription']
+        conn.execute('DELETE FROM subscriptions WHERE sub_id = ?', (sub_id,))
+        conn.commit()
+
+    # Always display current subscriptions
+    subscriptions = conn.execute('SELECT * FROM subscriptions').fetchall()
+    conn.close()
+
+    return render_template('subscriptions.html', subscriptions=subscriptions)
+
     
 
-#ROUTESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSEND
+#------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     
 
